@@ -17,22 +17,20 @@ end
 
 git "#{node['jblaine-users']['homedir']}/dotfiles" do
   user 'jblaine'
-  # This sucks because not based on SSH due to not having
+  # This sucks because it's not based on SSH due to not having
   # private key (whole encrypted data bag chicken and egg nightmare)
   # Can't push from this local repo w/o GH username + password :|
   repository 'https://github.com/jblaine/dotfiles.git'
-  notifies :run, 'script[linkdotfiles]', :immediately
 end
 
-# Quick hack instead of a bunch of 'link' resources
-script 'linkdotfiles' do
-  action :nothing
-  user 'jblaine'
-  interpreter 'bash'
-  code <<-EOH
-    ln -sf #{node['jblaine-users']['homedir']}/dotfiles/.bashrc #{node['jblaine-users']['homedir']}/.bashrc
-    ln -sf #{node['jblaine-users']['homedir']}/dotfiles/.bash_profile #{node['jblaine-users']['homedir']}/.bash_profile
-    ln -sf #{node['jblaine-users']['homedir']}/dotfiles/.vimrc #{node['jblaine-users']['homedir']}/.vimrc
-    ln -sf #{node['jblaine-users']['homedir']}/dotfiles/.vim #{node['jblaine-users']['homedir']}/.vim
-  EOH
+git "#{node['jblaine-users']['homedir']}/liquidprompt" do
+ user 'jblaine'
+ repository 'https://github.com/rfnash/liquidprompt.git'
+end
+
+%w{ .bashrc .bash_profile .vimrc .vim .liquidpromptrc }.each do |l|
+  link "#{node['jblaine-users']['homedir']}/#{l}" do
+    owner 'jblaine'
+    to "#{node['jblaine-users']['homedir']}/dotfiles/#{l}"
+  end
 end
