@@ -2,7 +2,8 @@ name "unix-base"
 
 description "Shut up"
 
-run_list "recipe[jblaine-users]"
+run_list "recipe[syslog_handler]",
+         "recipe[jblaine-users]"
 
 # Attributes applied if the node doesn't have it set already.
 #default_attributes()
