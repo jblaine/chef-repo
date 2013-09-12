@@ -47,7 +47,7 @@ class Chef
             f.lines.each do |line|
               if line =~ regex then
                 found = true
-                unless line == new_resource.line
+                unless line == new_resource.line << "\n"
                   line = new_resource.line
                   modified = true
                 end
@@ -55,15 +55,16 @@ class Chef
               temp_file.puts line
             end
 
-            if (found && !modified) then
-              f.puts new_resource.line
+            if (!found && modified) then # "add"!
+              temp_file.puts new_resource.line
+              modified = true
             end
 
             f.close
 
             if modified then
               temp_file.rewind
-              FileUtils.copy_file(temp_file,new_resource.path)
+              FileUtils.copy_file(temp_file.path,new_resource.path)
               FileUtils.chown(file_owner,file_group,new_resource.path)
               FileUtils.chmod(file_mode,new_resource.path)              
               new_resource.updated_by_last_action(true)
@@ -74,16 +75,20 @@ class Chef
             temp_file.unlink
           end
         else
+
+
           begin
-            f = ::File.open(new_resource.path, "w")
-            f.puts new_resource.line
+            nf = ::File.open(new_resource.path, 'w')            
+            nf.puts new_resource.line
             new_resource.updated_by_last_action(true)
+          rescue ENOENT
+            Chef::Log.info('ERROR: Containing directory does not exist for #{nf.class}')
           ensure
-            f.close
+            nf.close
           end
           
-        end
-      end
+        end # if ::File.exists?
+      end # def action_edit
       
       def nothing
       end
@@ -91,4 +96,3 @@ class Chef
     end
   end
 end
-
