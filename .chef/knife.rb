@@ -4,7 +4,7 @@ log_location             STDOUT
 node_name                "jblaine"
 client_key               "#{current_dir}/jblaine.pem"
 validation_client_name   "jblaine-validator"
-validation_key           "#{current_dir}/jblaine-validator.pem"
+validation_key           "/home/jblaine/.chef/jblaine-validator.pem"
 chef_server_url          "https://api.opscode.com/organizations/jblaine"
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )

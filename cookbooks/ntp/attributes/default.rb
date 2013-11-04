@@ -22,15 +22,23 @@
 #
 
 # default attributes for all platforms
-default['ntp']['servers']   = []
-default['ntp']['peers'] = []
-default['ntp']['restrictions'] = [
+default['ntp']['servers']      = []
+default['ntp']['peers']        = []
+default['ntp']['restrictions'] = []
+default['ntp']['base_restrictions'] = [
   'default kod notrap nomodify nopeer noquery',
   '127.0.0.1 nomodify',
   '-6 default kod notrap nomodify nopeer noquery',
   '-6 ::1 nomodify'
 ]
-default['ntp']['server_options'] = 'iburst'
+default['ntp']['servers']      = [
+  '0.pool.ntp.org',
+  '1.pool.ntp.org',
+  '2.pool.ntp.org',
+  '3.pool.ntp.org'
+]
+default['ntp']['server_flags'] = 'iburst'
+default['ntp']['peer_flags'] = 'iburst'
 
 # internal attributes
 default['ntp']['packages'] = %w(ntp ntpdate)
@@ -70,21 +78,18 @@ when 'freebsd'
   default['ntp']['conf_group'] = 'wheel'
   default['ntp']['var_group'] = 'wheel'
 when 'solaris2'
-  default['ntp']['var_owner'] = 'root'
-  default['ntp']['var_group'] = 'root'
-  if node['platform_version'] = '5.10'
-    default['ntp']['server_options'] = ''
-    default['ntp']['restrictions'] = [
+  # This cookbook has no support for Solaris package ops.
+  # Install SUNWntpr and SUNWntpu on your own somehow.
+  default['ntp']['packages'] = []
+  default['ntp']['service'] = 'ntp'
+  default['ntp']['conffile'] = '/etc/inet/ntp.conf'
+  if node['platform_version'].to_f <= 5.10
+    default['ntp']['server_flags'] = ''
+    default['ntp']['peer_flags'] = ''
+    # Across SunOS 5.10 and earlier due to ntpd 3.x :|
+    default['ntp']['base_restrictions'] = [
       'default notrap nomodify nopeer noquery',
-      '127.0.0.1 nomodify',
+      '127.0.0.1 nomodify'
     ]
-  elsif node['platform_version'] = '5.11'
-    default['ntp']['restrictions'] = [
-      'default notrap nomodify nopeer noquery kod',
-      '127.0.0.1 nomodify',
-    ]
-    default['ntp']['varlibdir'] = '/var/ntp'
-    default['ntp']['statsdir'] = "#{node['ntp']['varlibdir']}/ntpstats/"
-    default['ntp']['conffile'] = '/etc/inet/ntp.conf'
   end
 end
