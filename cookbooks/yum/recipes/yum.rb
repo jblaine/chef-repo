@@ -1,6 +1,7 @@
+# Encoding: utf-8
 #
 # Cookbook Name:: yum
-# Recipe:: yum 
+# Recipe:: yum
 #
 # Copyright 2011, Eric G. Wolfe
 # Copyright 2011, Opscode, Inc.
@@ -18,6 +19,6 @@
 # limitations under the License.
 #
 
-template "/etc/yum.conf" do
+template '/etc/yum.conf' do
   source "yum-rhel#{node['platform_version'].to_i}.conf.erb"
 end
