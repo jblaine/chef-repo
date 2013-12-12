@@ -4,6 +4,7 @@ description "Shut up"
 
 run_list "recipe[syslog_handler]",
          "recipe[jblaine-users]",
+         "recipe[python]",
          "recipe[ntp]"
 
 # Attributes applied if the node doesn't have it set already.
