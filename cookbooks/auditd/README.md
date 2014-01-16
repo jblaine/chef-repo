@@ -1,0 +1,40 @@
+Description
+===========
+A simple cookbook to install auditd and provided rulesets. Rulesets
+included in the auditd package as examples are based on 4 established
+standards:
+
+* [Controlled Access Protection Profile (CAPP)](http://www.commoncriteriaportal.org/files/ppfiles/capp.pdf)
+* [Labeled Security Protection Profile (LSPP)](http://www.commoncriteriaportal.org/files/ppfiles/lspp.pdf)
+* [National Industrial Security Program Operating Manual (NISPOM)](http://www.fas.org/sgp/library/nispom.htm)
+* [Security Technical Implementation Guides](http://iase.disa.mil/stigs/stig/index.html)
+
+The auditd package provides the client side tools for working with the
+linux kernel audit framework
+
+Requirements
+============
+linux - any distro, only ubuntu and RHEL 6 have been tested
+
+Attributes
+==========
+* node['auditd']['ruleset'] - ruleset to use, either default or one of
+  the provided examples
+	* NOTE: When using this recipe on RedHat systems, you're restricted to the "default" or "cis" rulesets, as RedHat uses version-specific paths for the .rules which we can't programatically determine at this time.
+* node['auditd']['backlog'] - backlog size, default is 320 should be
+larger for busy systems
+
+Usage
+=====
+Set the correct attribute based on the ruleset desired, one of:
+
+* "capp" : Controlled Access Protection Profile
+* "lspp" : Labeled Security Protection Profile
+* "nispom" : National Industrial Security Program Operating Manual (NISPOM) 
+* "stig" : Security Technical Implementation Guides 
+* "cis"  : Center for Internet Security auditd recommendations
+
+TODO
+====
+Ideally the auditd_rulset resource should make use of a data bag
+search to build the data driven ruleset
