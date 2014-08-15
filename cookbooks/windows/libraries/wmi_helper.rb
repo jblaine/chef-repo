@@ -16,22 +16,17 @@
 # limitations under the License.
 #
 
-#
-# Allow libraries to load the wmi-lite gem dependency they require
-# since there is no recipe execution of the chef_gem resource
-# that can be used when libraries are loaded ahead of resource 
-# execution.
-# 
-begin
-  require 'wmi-lite'
-rescue LoadError
-  empty_node = Chef::Node.new
-  empty_events = Chef::EventDispatch::Dispatcher.new
-  run_context = Chef::RunContext.new(empty_node, {}, empty_events)
+if RUBY_PLATFORM =~ /mswin|mingw32|windows/
+  require 'win32ole'
 
-  wmi_gem = Chef::Resource::ChefGem.new('wmi-lite', run_context)
-  wmi_gem.run_action(:install)
+  def execute_wmi_query(wmi_query)
+    wmi = ::WIN32OLE.connect("winmgmts://")
+    result = wmi.ExecQuery(wmi_query)
+    return nil unless result.each.count > 0
+    result
+  end
 
-  require 'wmi-lite'
+  def wmi_object_property(wmi_object, wmi_property)
+    wmi_object.send(wmi_property)
+  end
 end
-
