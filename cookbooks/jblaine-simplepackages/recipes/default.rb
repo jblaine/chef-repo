@@ -17,6 +17,8 @@ package 'ncurses-devel'
 package 'expat'
 package 'expat-devel'
 
+package 'perl-ExtUtils-MakeMaker'
+
 package 'httpd'
 
 package 'pylint'
