@@ -14,6 +14,8 @@ package 'libxml2-devel'
 package 'libxslt-devel'
 package 'libxslt'
 package 'ncurses-devel'
+package 'expat'
+package 'expat-devel'
 
 package 'httpd'
 
