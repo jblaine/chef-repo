@@ -11,6 +11,8 @@ run_list "recipe[jblaine-chef-client]",
          "recipe[jblaine-terminfo]",
          "recipe[build-essential]",
          "recipe[jblaine-simplepackages]",
+         "recipe[bash-CVE-2014-6271]",
+         "recipe[bash-CVE-2014-7169]",
          "recipe[ntp]"
 
 # Attributes applied if the node doesn't have it set already.
