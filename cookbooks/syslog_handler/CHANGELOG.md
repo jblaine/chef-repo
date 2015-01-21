@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of syslog_handler.
 
+## 0.1.8:
+
+* Don't require the syslog module on Windows
+
 ## 0.1.5:
 
 * Syslog exception info when there's a failure
