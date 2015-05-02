@@ -3,7 +3,7 @@ name "unix-base"
 description "Shut up"
 
 run_list "recipe[jblaine-chef-client]",
-         "recipe[syslog_handler]",
+#         "recipe[syslog_handler]",
          "recipe[jblaine-packagemgr]",
          "recipe[jblaine-users]",
          "recipe[python]",
