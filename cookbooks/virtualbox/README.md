@@ -6,6 +6,21 @@ Installs Virtualbox on OS X, Debian/Ubuntu or Windows.
 Changes
 =======
 
+## v1.0.3
+
+* Update `yum` dependency to version 3
+
+## v1.0.2
+
+* Changed libshadow-ruby18 dependency to ruby-shadow gem
+* Changed phpVirtualBox password to use "rawpassword" value from data bag
+* Added attribute: node['virtualbox']['webportal']['enable-apache2-default-site']
+* Fixed config.php installation directory to use node['virtualbox']['webportal']['installdir']
+
+## v1.0.1
+
+* Update install source for phpvirtualbox.
+
 ## v1.0
 
 * Use platform_family attribute to expand platform support.
@@ -102,12 +117,53 @@ recipe doesn't handle that.
 
 # Other recipes
 
-The following recipes are also available, but have not yet been documented.
+## user
 
-* systemservice
-* user
-* webportal
-* webservice
+Creates a user to run the system service and web service as.  This recipe
+is implicitly included in the "webservice", "webportal", and "systemservice"
+recipes.
+
+#### Attributes:
+
+* `node['virtualbox']['user']` - User name to create.  Defaults to `virtualbox`.
+* `node['virtualbox']['group']` - Group for user.  Defaults to `vboxusers`.
+
+#### Databags:
+
+* `passwords/virtualbox-user` - Must contain a "password" attribute which sets
+  the password for the VirtualBox user.
+
+A sample data bag looks like:
+    {
+      "id" : "virtualbox-user",
+      "password" : "virtualbox"
+    }
+
+## systemservice
+
+Creates a system service that will run virtual machines at startup.  Add UIDs of
+any machines you want started to /etc/virtualbox/machines_enabled.
+
+## webservice
+
+Installs a web service which allows remote control of VirtualBox.  This is
+implicity included in the "webportal" recipe.  Note that the webservice is
+installed with no authentication, so make sure you have a firewall set up
+or that you are on a trusted network!
+
+## webportal
+
+Installs apache2 and a [phpvirtualbox](http://sourceforge.net/projects/phpvirtualbox/)
+to provide a web console to manage VirtualBox.  Note by default phpvirtualbox is
+installed to /var/www.  For the default install, it is recommended that you set
+`node['apache']['default_site_enabled']` to true, but you can also create your own
+site for phpvirtualbox if you don't want to use the default site.
+
+#### Attributes:
+
+* `node['virtualbox']['webportal']['installdir']` - Directory to install phpvirtualbox to.
+  Defaults to /var/www.
+
 
 Helper Library
 ==============
@@ -153,6 +209,7 @@ License and Author
 * Author: Joshua Timberman <cookbooks@housepub.org>
 * Author: Ringo De Smet
 * Author: Chris Peplin
+* Author: Eric G. Wolfe <eric.wolfe@gmail.com>
 
 * Copyright 2011-2013, Joshua Timberman <cookbooks@housepub.org>
 
