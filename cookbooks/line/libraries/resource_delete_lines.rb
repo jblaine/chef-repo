@@ -1,8 +1,8 @@
-#
 # Cookbook Name:: line
-# Library:: resource_append_if_no_such_line
+# Library:: resource_delete_lines
 #
-# Author:: Sean OMeara <someara@chef.io>                                  
+# Author:: Sean OMeara <someara@chef.io>
+# Author:: Jeff Blaine <jblaine@kickflop.net>
 # Copyright 2012-2013, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,15 +16,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#    
+#
 
 class Chef
   class Resource
-    class AppendIfNoLine < Chef::Resource
+    class DeleteLines < Chef::Resource
 
       def initialize(name, run_context=nil)
         super
-        @resource_name = :append_if_no_line
+        @resource_name = :delete_lines
         @action = :edit
         @allowed_actions.push(:edit,:nothing)
       end
@@ -37,7 +37,7 @@ class Chef
           )
       end
 
-      def line(arg=nil)
+      def pattern(arg=nil)
         set_or_return(
           :line,
           arg,

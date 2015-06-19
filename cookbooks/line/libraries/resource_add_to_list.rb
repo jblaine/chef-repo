@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: line
-# Library:: resource_append_if_no_such_line
+# Library:: resource_add_to_list
 #
 # Author:: Sean OMeara <someara@chef.io>                                  
 # Copyright 2012-2013, Chef Software, Inc.
@@ -17,16 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #    
-
 class Chef
   class Resource
-    class AppendIfNoLine < Chef::Resource
-
+    class AddToList < Chef::Resource
+      
       def initialize(name, run_context=nil)
         super
-        @resource_name = :append_if_no_line
+        @resource_name = :add_to_list
         @action = :edit
-        @allowed_actions.push(:edit,:nothing)
+        @allowed_actions.push(:edit, :nothing)
       end
 
       def path(arg=nil)
@@ -37,9 +36,25 @@ class Chef
           )
       end
 
-      def line(arg=nil)
+      def pattern(arg=nil)
         set_or_return(
-          :line,
+          :pattern,
+          arg,
+          :kind_of => String
+          )
+      end
+
+      def delim(arg=nil)
+        set_or_return(
+          :delim,
+          arg,
+          :kind_of => Array
+          )
+      end
+
+      def entry(arg=nil)
+        set_or_return(
+          :entry,
           arg,
           :kind_of => String
           )
