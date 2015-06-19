@@ -1,13 +1,12 @@
-name              "nscd"
-maintainer        "Opscode, Inc."
-maintainer_email  "cookbooks@opscode.com"
-license           "Apache 2.0"
-description       "Installs and configures nscd"
-version           "0.8.2"
-suggests          "openldap"
+name              'nscd'
+maintainer        'Chef Software, Inc.'
+maintainer_email  'cookbooks@chef.io'
+license           'Apache 2.0'
+description       'Installs and configures nscd'
+version           '0.13.0'
 
-recipe "nscd", "Installs and configures nscd"
+recipe 'nscd', 'Installs and configures nscd'
 
-%w{ redhat centos debian ubuntu amazon scientific oracle }.each do |os|
+%w(ubuntu debian fedora centos redhat oracle scientific amazon).each do |os|
   supports os
 end
