@@ -2,6 +2,52 @@ git Cookbook CHANGELOG
 ======================
 This file is used to list changes made in each version of the git cookbook.
 
+v4.2.2 (2015-04-23)
+-------------------
+- Fix up action in Chef::Resource::GitService
+- Adding matchers
+
+v4.2.1 (2015-04-17)
+-------------------
+- Fixing Chef 11 support.
+- Adding provider mapping file
+
+v4.2.0 (2015-04-15)
+-------------------
+- Converting recipes to resources.
+- Keeping recipe interface for backwards compat
+
+v4.1.0 (2014-12-23)
+-------------------
+- Fixing windows package checksums
+- Various test coverage additions
+
+v4.0.2 (2014-04-23)
+-------------------
+- [COOK-4482] - Add FreeBSD support for installing git client
+
+v4.0.0 (2014-03-18)
+-------------------
+- [COOK-4397] Only use_inline_resources on Chef 11
+
+
+v3.1.0 (2014-03-12)
+-------------------
+- [COOK-4392] - Cleanup git_config LWRP
+
+
+v3.0.0 (2014-02-28)
+-------------------
+[COOK-4387] Add git_config type
+[COOK-4388] Fix up rubocops
+[COOK-4390] Add integration tests for default and server suites
+
+
+v2.10.0 (2014-02-25)
+--------------------
+- [COOK-4146] - wrong dependency in git::source for rhel 6
+- [COOK-3947] - Git cookbook adds itself to the path every run
+
 
 v2.9.0
 ------
@@ -29,16 +75,16 @@ v2.8.0
 v2.7.0
 ------
 ### Bug
-- **[COOK-3624](https://tickets.opscode.com/browse/COOK-3624)** - Don't restart `xinetd` on each Chef client run
-- **[COOK-3482](https://tickets.opscode.com/browse/COOK-3482)** - Force git to add itself to the current process' PATH
+- **[COOK-3624](https://tickets.chef.io/browse/COOK-3624)** - Don't restart `xinetd` on each Chef client run
+- **[COOK-3482](https://tickets.chef.io/browse/COOK-3482)** - Force git to add itself to the current process' PATH
 
 ### New Feature
-- **[COOK-3223](https://tickets.opscode.com/browse/COOK-3223)** - Support Omnios and SmartOS package installs
+- **[COOK-3223](https://tickets.chef.io/browse/COOK-3223)** - Support Omnios and SmartOS package installs
 
 v2.6.0
 ------
 ### Improvement
-- **[COOK-3193](https://tickets.opscode.com/browse/COOK-3193)** - Add proper debian packages
+- **[COOK-3193](https://tickets.chef.io/browse/COOK-3193)** - Add proper debian packages
 
 v2.5.2
 ------
