@@ -2,7 +2,7 @@
 # Cookbook Name:: jenkins
 # HWRP:: ssh_slave
 #
-# Author:: Seth Chisamore <schisamo@getchef.com>
+# Author:: Seth Chisamore <schisamo@chef.io>
 #
 # Copyright 2013-2014, Chef Software, Inc.
 #
@@ -37,16 +37,16 @@ class Chef
 
     # Attributes
     attribute :host,
-      kind_of: String
+              kind_of: String
     attribute :port,
-      kind_of: Integer,
-      default: 22
+              kind_of: Integer,
+              default: 22
     attribute :credentials,
-      kind_of: [Resource::JenkinsCredentials, String]
+              kind_of: [Resource::JenkinsCredentials, String]
     attribute :command_prefix,
-      kind_of: String
+              kind_of: String
     attribute :command_suffix,
-      kind_of: String
+              kind_of: String
 
     #
     # The credentials to SSH into the slave with. Credentials can be any
@@ -80,6 +80,7 @@ class Chef
         @current_resource.port(current_slave[:port])
         @current_resource.credentials(current_slave[:credentials])
         @current_resource.jvm_options(current_slave[:jvm_options])
+        @current_resource.java_path(current_slave[:java_path])
       end
 
       @current_resource
@@ -94,14 +95,14 @@ class Chef
     #
     def launcher_groovy
       <<-EOH.gsub(/ ^{8}/, '')
-        #{credential_lookup_groovy('credentials_id')}
+        #{credential_lookup_groovy('credentials')}
         launcher =
           new hudson.plugins.sshslaves.SSHLauncher(
             #{convert_to_groovy(new_resource.host)},
             #{convert_to_groovy(new_resource.port)},
-            credentials_id,
+            credentials,
             #{convert_to_groovy(new_resource.jvm_options)},
-            null,
+            #{convert_to_groovy(new_resource.java_path)},
             #{convert_to_groovy(new_resource.command_prefix)},
             #{convert_to_groovy(new_resource.command_suffix)}
           )
@@ -116,6 +117,7 @@ class Chef
         host: 'slave.launcher.host',
         port: 'slave.launcher.port',
         jvm_options: 'slave.launcher.jvmOptions',
+        java_path: 'slave.launcher.javaPath',
         command_prefix: 'slave.launcher.prefixStartSlaveCmd',
         command_suffix: 'slave.launcher.suffixStartSlaveCmd',
       }
@@ -123,7 +125,7 @@ class Chef
       if new_resource.parsed_credentials.match(UUID_REGEX)
         map[:credentials] = 'slave.launcher.credentialsId'
       else
-        map[:credentials] = 'hudson.plugins.sshslaves.SSHLauncher.lookupSystemCredentials(slave.launcher.credentialsId).username'
+        map[:credentials] = 'slave.launcher.credentialsId == null ? null : hudson.plugins.sshslaves.SSHLauncher.lookupSystemCredentials(slave.launcher.credentialsId).username'
       end
       map
     end
@@ -140,11 +142,10 @@ class Chef
     #
     def credential_lookup_groovy(groovy_variable_name = 'credentials_id')
       if new_resource.parsed_credentials.match(UUID_REGEX)
-        "#{groovy_variable_name} = #{convert_to_groovy(new_resource.parsed_credentials)}"
+        "#{groovy_variable_name} = hudson.plugins.sshslaves.SSHLauncher.lookupSystemCredentials(#{convert_to_groovy(new_resource.parsed_credentials)})"
       else
         <<-EOH.gsub(/ ^{10}/, '')
-          #{credentials_for_username_groovy(new_resource.parsed_credentials, 'user_credentials')}
-          #{groovy_variable_name} = user_credentials.id
+          #{credentials_for_username_groovy(new_resource.parsed_credentials, groovy_variable_name)}
         EOH
       end
     end
@@ -153,5 +154,5 @@ end
 
 Chef::Platform.set(
   resource: :jenkins_ssh_slave,
-  provider: Chef::Provider::JenkinsSSHSlave
+  provider: Chef::Provider::JenkinsSSHSlave,
 )
