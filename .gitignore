@@ -4,6 +4,7 @@
 # Ignore Chef key files and secrets
 ###
 .chef/*.pem
+.chef/syntaxcache
 .chef/encrypted_data_bag_secret
 .kitchen/
 .kitchen.local.yml
