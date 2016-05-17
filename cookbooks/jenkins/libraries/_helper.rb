@@ -47,7 +47,7 @@ EOH
 
     # Matches Version 4 UUID per RFC 4122
     # Example: 38537014-ec66-49b5-aff2-aed1c19e2989
-    UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/.freeze unless defined?(UUID_REGEX)
+    UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/ unless defined?(UUID_REGEX)
 
     #
     # Helper method for creating an accessing a new {Jenkins::Executor} from
@@ -125,6 +125,38 @@ EOH
     end
 
     #
+    # A Groovy snippet that will set the requested local Groovy variable
+    # to an instance of the credentials represented by `secret`.
+    # Returns the Groovy `null` if no credentials are found.
+    #
+    # @param [String] secret
+    # @param [String] description
+    # @param [String] groovy_variable_name
+    # @return [String]
+    #
+    def credentials_for_secret_groovy(secret, description, groovy_variable_name)
+      <<-EOH.gsub(/ ^{8}/, '')
+        import jenkins.model.Jenkins;
+        import hudson.util.Secret;
+        import com.cloudbees.plugins.credentials.CredentialsProvider
+        import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+        import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+
+        available_credentials =
+          CredentialsProvider.lookupCredentials(
+            StringCredentials.class,
+            Jenkins.getInstance(),
+            hudson.security.ACL.SYSTEM
+          ).findAll({
+            it.secret      == new Secret(#{convert_to_groovy(secret)}) &&
+            it.description == #{convert_to_groovy(description)}
+          })
+
+        #{groovy_variable_name} = available_credentials.size() > 0 ? available_credentials[0] : null
+      EOH
+    end
+
+    #
     # Helper method for converting a Ruby value to it's equivalent in
     # Groovy.
     #
@@ -137,9 +169,9 @@ EOH
       when String
         # This is ugly but it ensures any backslashes appear as
         # double-backslashes in the resulting Groovy code.
-        val.gsub!(/\\/, '\\\\\\\\')
+        val = val.gsub(/\\/, '\\\\\\\\')
         # Escape single quotes
-        val.gsub!(/'/, "\\\\'")
+        val = val.gsub(/'/, "\\\\'")
         "'#{val}'"
       when Array
         list_members = val.map do |v|
@@ -293,7 +325,7 @@ EOH
     # @return [String]
     #
     def username
-      node.run_state[:jenkins_username]
+      node.run_state[:jenkins_username] # ~FC001
     end
 
     #
@@ -302,7 +334,7 @@ EOH
     # @return [String]
     #
     def password
-      node.run_state[:jenkins_password]
+      node.run_state[:jenkins_password] # ~FC001
     end
 
     #
@@ -446,9 +478,7 @@ EOH
         # update-center data and can handle the plugin installation through CLI exactly
         # in the same way as through the user interface.
         uri = URI(uri_join(endpoint, 'updateCenter', 'byId', 'default', 'postBack'))
-        headers = {
-          'Accept' => 'application/json',
-        }
+        headers = { 'Accept' => 'application/json' }
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true if uri.scheme == 'https'
         http.post(uri.path, extracted_json, headers)

@@ -24,12 +24,8 @@ require_relative 'slave'
 require_relative 'slave_jnlp'
 
 class Chef
-  class Resource::JenkinsWindowsSlave < Resource::JenkinsJNLPSlave
-    # Chef attributes
-    provides :jenkins_windows_slave, on_platforms: %w(windows)
-
-    # Set the resource name
-    self.resource_name = :jenkins_windows_slave
+  class Resource::JenkinsWindowsSlave < Resource::JenkinsJnlpSlave
+    resource_name :jenkins_windows_slave
 
     # Actions
     actions :create, :delete, :connect, :disconnect, :online, :offline
@@ -46,10 +42,10 @@ class Chef
               default: 'C:\jenkins'
     attribute :winsw_url,
               kind_of: String,
-              default: 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.16/winsw-1.16-bin.exe'
+              default: 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.17/winsw-1.17-bin.exe'
     attribute :winsw_checksum,
               kind_of: String,
-              default: '052f82c167fbe68a4025bcebc19fff5f11b43576a2ec62b0415432832fa2272d'
+              default: '5859b114d96800a2b98ef9d19eaa573a786a422dad324547ef25be181389df01'
     attribute :path,
               kind_of: String
     attribute :pre_run_cmds,
@@ -59,7 +55,9 @@ class Chef
 end
 
 class Chef
-  class Provider::JenkinsWindowsSlave < Provider::JenkinsJNLPSlave
+  class Provider::JenkinsWindowsSlave < Provider::JenkinsJnlpSlave
+    provides :jenkins_windows_slave, platform: %w(windows)
+
     def load_current_resource
       @current_resource ||= Resource::JenkinsWindowsSlave.new(new_resource.name)
       super
@@ -76,7 +74,12 @@ class Chef
       #  * remote_fs_dir_resource
       #  * slave_jar_resource
       #
-      slave_exe_resource.run_action(:create)
+
+      # The jenkins-slave.exe is needed to get the slave up and running under a windows service.
+      # However, once it is created Jenkins Master wants to control the version.  So we should only
+      # create the file if it is missing.
+      slave_exe_resource.run_action(:create_if_missing)
+
       slave_compat_xml.run_action(:create)
       slave_bat_resource.run_action(:create)
       slave_xml_resource.run_action(:create)
@@ -104,8 +107,7 @@ class Chef
     def remote_fs_dir_resource
       return @remote_fs_dir_resource if @remote_fs_dir_resource
       @remote_fs_dir_resource = Chef::Resource::Directory.new(new_resource.remote_fs, run_context)
-      user_parts = user_hash
-      @remote_fs_dir_resource.rights(:full_control, user_parts['username'])
+      @remote_fs_dir_resource.rights(:full_control, new_resource.user)
       @remote_fs_dir_resource.recursive(true)
       @remote_fs_dir_resource
     end
@@ -142,31 +144,17 @@ class Chef
       return @slave_compat_xml if @slave_compat_xml
       slave_compat_xml = ::File.join(new_resource.remote_fs, "#{new_resource.service_name}.exe.config")
       @slave_compat_xml = Chef::Resource::File.new(slave_compat_xml, run_context)
-      @slave_compat_xml.content(<<-EOH.gsub(/ ^{8}/, '')
+      @slave_compat_xml.content(
+        <<-EOH.gsub(/ ^{8}/, '')
         <configuration>
           <startup>
             <supportedRuntime version="v2.0.50727" />
             <supportedRuntime version="v4.0" />
           </startup>
         </configuration>
-      EOH
+        EOH
       )
       @slave_compat_xml
-    end
-
-    def user_hash
-      userhash = {}
-
-      user_parts = new_resource.user.match(/(.*)\\(.*)/)
-      if user_parts
-        userhash['domain'] = user_parts[1]
-        userhash['username']   = user_parts[2]
-      else
-        userhash['domain'] = '.'
-        userhash['username']   = new_resource.user
-      end
-
-      userhash
     end
 
     #
@@ -181,11 +169,6 @@ class Chef
 
       slave_xml = ::File.join(new_resource.remote_fs, "#{new_resource.service_name}.xml")
 
-      # Get User object
-      user_parts = user_hash
-      user_domain = user_parts['domain']
-      user_account = user_parts['username']
-
       @slave_xml_resource = Chef::Resource::Template.new(slave_xml, run_context)
       @slave_xml_resource.cookbook('jenkins')
       @slave_xml_resource.source('jenkins-slave.xml.erb')
@@ -199,7 +182,7 @@ class Chef
         user_domain:   user_domain,
         user_account:  user_account,
         user_password: new_resource.password,
-        path:          new_resource.path,
+        path:          new_resource.path
       )
       @slave_xml_resource.notifies(:run, install_service_resource)
       @slave_xml_resource
@@ -225,7 +208,7 @@ class Chef
         java_bin:      java,
         slave_jar:     slave_jar,
         jnlp_url:      jnlp_url,
-        jnlp_secret:   jnlp_secret,
+        jnlp_secret:   jnlp_secret
       )
       @slave_bat_resource
     end
@@ -266,11 +249,36 @@ class Chef
       end
       @service_resource
     end
+
+    #
+    # Windows domain for the user or `.` if a domain is not set.
+    #
+    # @return [String]
+    #
+    def user_domain
+      @user_domain ||= begin
+        if (parts = new_resource.user.match(/(?<domain>.*)\\(?<account>.*)/))
+          parts[:domain]
+        else
+          '.'
+        end
+      end
+    end
+
+    #
+    # Account name of the configured user. The domain prefix is also properly
+    # stripped off.
+    #
+    # @return [String]
+    #
+    def user_account
+      @user_account ||= begin
+        if (parts = new_resource.user.match(/(?<domain>.*)\\(?<account>.*)/))
+          parts[:account]
+        else
+          new_resource.user
+        end
+      end
+    end
   end
 end
-
-Chef::Platform.set(
-  resource: :jenkins_windows_slave,
-  platform: :windows,
-  provider: Chef::Provider::JenkinsWindowsSlave,
-)
