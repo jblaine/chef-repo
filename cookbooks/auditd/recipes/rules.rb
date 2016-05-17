@@ -1,6 +1,6 @@
 # Encoding: utf-8
 # Cookbook Name:: auditd
-# Resource:: auditd_ruleset
+# Recipe:: default
 #
 # Copyright 2012, Heavy Water Operations, LLC.
 #
@@ -17,14 +17,19 @@
 # limitations under the License.
 #
 
-actions :create
-default_action :create
+include_recipe 'auditd::default'
 
-# for 10.8 and earlier
-def initialize(*args)
-  super
-  @action = :create
+case node['auditd']['ruleset']
+when 'capp'
+  auditd_builtins 'capp'
+when 'lspp'
+  auditd_builtins 'lspp'
+when 'nispom'
+  auditd_builtins 'nispom'
+when 'stig'
+  auditd_builtins 'stig'
+when 'cis'
+  auditd_ruleset 'cis.rules'
+else
+  auditd_ruleset node['auditd']['ruleset']
 end
-
-attribute :name, kind_of: String, name_attribute: true
-attribute :cookbook, kind_of: String, default: nil

@@ -1,4 +1,4 @@
-#
+# Encoding: utf-8
 # Cookbook Name:: auditd
 # Recipe:: default
 #
@@ -17,30 +17,19 @@
 # limitations under the License.
 #
 
-case node.platform
-when "redhat"
-  package "audit"
+case node['platform_family']
+when 'rhel'
+  package 'audit'
+when 'fedora'
+  package 'audit'
 else
-  package "auditd"
+  package 'auditd'
 end
 
-
-service "auditd" do
-  supports [ :restart, :reload, :status ]
+service 'auditd' do
+  supports [:start, :stop, :restart, :reload, :status]
+  if node['platform_family'] == 'rhel' && node['platform_version'].to_f >= 7
+    restart_command 'service auditd restart'
+  end
   action :enable
-end
-
-case node['auditd']['ruleset']
-when "capp"
-  auditd_builtins "capp"
-when "lspp"
-  auditd_builtins "lspp"
-when "nispom"
-  auditd_builtins "nispom"
-when "stig"
-  auditd_builtins "stig"
-when "cis"
-  auditd_ruleset "cis.rules"
-else
-  auditd_ruleset "default.rules"
 end

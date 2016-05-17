@@ -1,4 +1,4 @@
-#
+# Encoding: utf-8
 # Cookbook Name:: auditd
 # Provider:: auditd_ruleset
 #
@@ -19,9 +19,9 @@
 
 # provider for installing audit rules from a template
 action :create do
-  template "/etc/audit/audit.rules" do
+  template '/etc/audit/audit.rules' do
     source "#{new_resource.name}.erb"
-    notifies :restart, resources( :service => "auditd" )
+    cookbook new_resource.cookbook if new_resource.cookbook
+    notifies :restart, resources(service: 'auditd')
   end
 end
-

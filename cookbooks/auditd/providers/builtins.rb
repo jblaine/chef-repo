@@ -1,4 +1,4 @@
-#
+# Encoding: utf-8
 # Cookbook Name:: auditd
 # Provider:: auditd_builtins
 #
@@ -18,11 +18,20 @@
 #
 
 # provider for installing audit templates provided by auditd package
+
 action :create do
-  execute "installing ruleset #{new_resource.name}" do
-    command "zcat /usr/share/doc/auditd/examples/#{new_resource.name}.rules.gz\
- > /etc/audit/audit.rules"
-    notifies :restart, resources( :service => "auditd" )
+  case node['platform_family']
+  when 'rhel'
+    #auditd_version = `/sbin/aureport -v`.split(' ').last
+
+    template "/etc/audit/audit.rules" do
+      source "#{new_resource.name}.rules.erb"
+      notifies :restart, 'service[auditd]'
+    end
+  else
+    execute "installing ruleset #{new_resource.name}" do
+      command "zcat /usr/share/doc/auditd/examples/#{new_resource.name}.rules.gz > /etc/audit/audit.rules"
+      notifies :restart, 'service[auditd]'
+    end
   end
 end
-
