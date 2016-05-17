@@ -18,25 +18,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 require_relative 'credentials'
+require_relative 'credentials_user'
 require_relative '_params_validate'
 
 class Chef
-  class Resource::JenkinsPrivateKeyCredentials < Resource::JenkinsCredentials
-    require 'openssl'
+  class Resource::JenkinsPrivateKeyCredentials < Resource::JenkinsUserCredentials
+    include Jenkins::Helper
 
-    # Chef attributes
-    provides :jenkins_private_key_credentials
-
-    # Set the resource name
-    self.resource_name = :jenkins_private_key_credentials
-
-    # Actions
-    actions :create, :delete
-    default_action :create
+    resource_name :jenkins_private_key_credentials
 
     # Attributes
+    attribute :username,
+              kind_of: String,
+              name_attribute: true
     attribute :id,
               kind_of: String,
               regex: UUID_REGEX, # Private Key credentials must still have a UUID based ID
@@ -66,7 +61,9 @@ class Chef
 end
 
 class Chef
-  class Provider::JenkinsPrivateKeyCredentials < Provider::JenkinsCredentials
+  class Provider::JenkinsPrivateKeyCredentials < Provider::JenkinsUserCredentials
+    provides :jenkins_private_key_credentials
+
     def load_current_resource
       @current_resource ||= Resource::JenkinsPrivateKeyCredentials.new(new_resource.name)
 
@@ -110,7 +107,7 @@ class Chef
     def attribute_to_property_map
       {
         private_key: 'credentials.privateKey',
-        passphrase: 'credentials.passphrase.plainText',
+        passphrase: 'credentials.passphrase.plainText'
       }
     end
 
@@ -129,8 +126,3 @@ class Chef
     end
   end
 end
-
-Chef::Platform.set(
-  resource: :jenkins_private_key_credentials,
-  provider: Chef::Provider::JenkinsPrivateKeyCredentials,
-)

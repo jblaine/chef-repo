@@ -27,12 +27,10 @@ require_relative '_params_validate'
 
 class Chef
   class Resource::JenkinsPlugin < Resource::LWRPBase
+    resource_name :jenkins_plugin
+
     # Chef attributes
     identity_attr :name
-    provides :jenkins_plugin
-
-    # Set the resource name
-    self.resource_name = :jenkins_plugin
 
     # Actions
     actions :install, :uninstall, :enable, :disable
@@ -69,6 +67,10 @@ end
 
 class Chef
   class Provider::JenkinsPlugin < Provider::LWRPBase
+    include Jenkins::Helper
+
+    provides :jenkins_plugin
+
     class PluginNotInstalled < StandardError
       def initialize(plugin, action)
         super <<-EOH
@@ -77,8 +79,6 @@ The Jenkins plugin `#{plugin}' is not installed. In order to #{action}
 EOH
       end
     end
-
-    include Jenkins::Helper
 
     def load_current_resource
       @current_resource ||= Resource::JenkinsPlugin.new(new_resource.name)
@@ -117,14 +117,14 @@ EOH
             new_resource.source,
             new_resource.name,
             nil,
-            cli_opts: new_resource.options,
+            cli_opts: new_resource.options
           )
         else
           install_plugin_from_update_center(
             new_resource.name,
             new_resource.version,
             cli_opts: new_resource.options,
-            install_deps: new_resource.install_deps,
+            install_deps: new_resource.install_deps
           )
         end
       end
@@ -139,11 +139,11 @@ EOH
 
       if current_resource.installed?
         if plugin_version(current_resource.version) == desired_version
-          Chef::Log.debug("#{new_resource} version #{current_resource.version} already installed - skipping")
+          Chef::Log.info("#{new_resource} version #{current_resource.version} already installed - skipping")
         else
           current_version = plugin_version(current_resource.version)
 
-          if current_version < desired_version
+          if plugin_upgrade?(current_version, desired_version)
             converge_by("Upgrade #{new_resource} from #{current_resource.version} to #{desired_version}", &install_block)
           else
             converge_by("Downgrade #{new_resource} from #{current_resource.version} to #{desired_version}", &downgrade_block)
@@ -170,7 +170,7 @@ EOH
     #
     action(:disable) do
       unless current_resource.installed?
-        fail PluginNotInstalled.new(new_resource.name, :disable)
+        raise PluginNotInstalled.new(new_resource.name, :disable)
       end
 
       disabled = "#{plugin_file(new_resource.name)}.disabled"
@@ -194,7 +194,7 @@ EOH
     #
     action(:enable) do
       unless current_resource.installed?
-        fail PluginNotInstalled.new(new_resource.name, :enable)
+        raise PluginNotInstalled.new(new_resource.name, :enable)
       end
 
       disabled = "#{plugin_file(new_resource.name)}.disabled"
@@ -263,7 +263,7 @@ EOH
 
       # Compute some versions; Parse them as `Gem::Version` instances for easy
       # comparisons.
-      latest_version    = plugin_version(remote_plugin_data['version'])
+      latest_version = plugin_version(remote_plugin_data['version'])
 
       # Brute-force install all dependencies
       if opts[:install_deps] && remote_plugin_data['dependencies'].any?
@@ -274,9 +274,9 @@ EOH
           if plugin_installation_manifest(dep['name'])
             Chef::Log.debug "A version of dependency #{dep['name']} is already installed - skipping"
             next
-          else
+          elsif dep['optional'] == false
             # only install required dependencies
-            install_plugin_from_update_center(dep['name'], dep['version'], opts) if dep['optional'] == false
+            install_plugin_from_update_center(dep['name'], dep['version'], opts)
           end
         end
       end
@@ -395,7 +395,7 @@ EOH
           #   Plugin-Version: 1.4
           #
           config, value = line.split(/:\s/, 2)
-          config = config.gsub('-', '_').downcase
+          config = config.tr('-', '_').downcase
           value = value.strip if value # remove trailing \r\n
 
           plugin_manifest[config] = value
@@ -404,6 +404,24 @@ EOH
 
       plugin_manifest
     end
+
+    #
+    # Return whether plugin should be upgraded to desired version
+    # (i.e. that current < desired).
+    # https://github.com/chef-cookbooks/jenkins/issues/380
+    # If only one of the two versions is a Gem::Version, we
+    # fallback to String comparison.
+    #
+    # @param [Gem::Version, String] current_version
+    # @param [Gem::Version, String] desired_version
+    # @return [Boolean]
+    #
+    def plugin_upgrade?(current_version, desired_version)
+      current_version < desired_version
+    rescue ArgumentError
+      current_version.to_s < desired_version.to_s
+    end
+
     #
     # Return the plugin version for +version+.
     # https://github.com/chef-cookbooks/jenkins/issues/292
@@ -424,5 +442,5 @@ end
 
 Chef::Platform.set(
   resource: :jenkins_plugin,
-  provider: Chef::Provider::JenkinsPlugin,
+  provider: Chef::Provider::JenkinsPlugin
 )
