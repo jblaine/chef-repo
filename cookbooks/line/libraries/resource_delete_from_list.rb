@@ -1,9 +1,9 @@
 #
 # Cookbook Name:: line
-# Library:: resource_replace_or_add
+# Library:: resource_delete_from_list
 #
-# Author:: Sean OMeara <someara@chef.io>
-# Copyright 2012-2013, Chef Software, Inc.
+# Author:: Antek S. Baranski <antek.baranski@gmail.com>
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@
 #
 class Chef
   class Resource
-    class ReplaceOrAdd < Chef::Resource
+    class DeleteFromList < Chef::Resource
       def initialize(name, run_context = nil)
         super
-        @resource_name = :replace_or_add
+        @resource_name = :delete_from_list
         @action = :edit
-        @allowed_actions.push(:edit)
+        @allowed_actions.push(:edit, :nothing)
       end
 
       def path(arg = nil)
@@ -43,9 +43,17 @@ class Chef
         )
       end
 
-      def line(arg = nil)
+      def delim(arg = nil)
         set_or_return(
-          :line,
+          :delim,
+          arg,
+          kind_of: Array
+        )
+      end
+
+      def entry(arg = nil)
+        set_or_return(
+          :entry,
           arg,
           kind_of: String
         )
