@@ -2,7 +2,7 @@
 # Cookbook Name:: nscd
 # Recipe:: default
 #
-# Copyright 2009-2015, Chef Software, Inc.
+# Copyright 2009-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 package 'nscd' do
   package_name node['nscd']['package']
+  version node['nscd']['version'] unless node['nscd']['version'].nil?
   not_if { platform?('smartos') }
 end
 
@@ -28,20 +29,14 @@ template '/etc/nscd.conf' do
   group 'root'
   mode '0644'
   variables(
-    :settings => node['nscd']
+    settings: node['nscd'],
+    databases: sanitize_databases(node['nscd']['databases'])
   )
   notifies :restart, 'service[nscd]'
 end
 
 service 'nscd' do
   service_name 'name-service-cache:default' if platform?('smartos')
-  supports :restart => true, :status => true
+  supports restart: true, status: true
   action   [:enable, :start]
-end
-
-%w(passwd group).each do |cmd|
-  execute "nscd-clear-#{cmd}" do
-    command "/usr/sbin/nscd -i #{cmd}"
-    action  :nothing
-  end
 end
