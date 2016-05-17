@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: apache2
-# Attributes:: mod_php5
+# Recipe:: mod_watchdog
 #
-# Copyright 2014, Viverae, Inc.
+# Copyright 2016, Alexander van Zoest
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-default['apache']['mod_php5']['install_method'] = 'package'
-default['apache']['mod_php5']['so_filename'] = 'libphp5.so'
-default['apache']['mod_php5']['so_filename'] = 'mod_php5.so' if node['platform_family'] == 'suse'
-
-if node['platform'] == 'amazon' && node['apache']['version'] == '2.4'
-  default['apache']['mod_php5']['so_filename'] = 'libphp.so'
-end
+# http://httpd.apache.org/docs/2.4/mod/mod_watchdog.html
+# To allow a module to use mod_watchdog functionality be loaded before the calling module.
+# see https://github.com/svanzoest-cookbooks/apache2/issues/224
+apache_module 'watchdog'
