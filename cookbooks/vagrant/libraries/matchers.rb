@@ -1,7 +1,4 @@
-# Cookbook Name:: vagrant
-# Recipe:: default
-#
-# Copyright 2013, Joshua Timberman
+# Copyright 2015 Joshua Timberman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,5 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe "#{cookbook_name}::#{node['platform_family']}"
-include_recipe "#{cookbook_name}::install_plugins" unless node['vagrant']['plugins'].empty?
+if defined?(ChefSpec)
+  ChefSpec.define_matcher(:vagrant_plugin)
+
+  def install_vagrant_plugin(resource_name)
+    ChefSpec::Matchers::ResourceMatcher.new(:vagrant_plugin, :install, resource_name)
+  end
+
+  def uninstall_vagrant_plugin(resource_name)
+    ChefSpec::Matchers::ResourceMatcher.new(:vagrant_plugin, :uninstall, resource_name)
+  end
+
+  def remove_vagrant_plugin(resource_name)
+    ChefSpec::Matchers::ResourceMatcher.new(:vagrant_plugin, :remove, resource_name)
+  end
+end

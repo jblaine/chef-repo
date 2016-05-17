@@ -1,7 +1,7 @@
 # Cookbook Name:: vagrant
-# Recipe:: default
-#
-# Copyright 2013, Joshua Timberman
+# Recipe:: suse
+
+# Copyright 2015 Joshua Timberman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,5 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe "#{cookbook_name}::#{node['platform_family']}"
-include_recipe "#{cookbook_name}::install_plugins" unless node['vagrant']['plugins'].empty?
+Chef::Log.debug 'SUSE is not specifically supported by Vagrant, going to try anyway as if we were RHEL (rpm install).' if platform_family?('suse')
+
+include_recipe 'vagrant::rhel'
