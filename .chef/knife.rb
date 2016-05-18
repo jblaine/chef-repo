@@ -3,9 +3,9 @@
 current_dir = File.dirname(__FILE__)
 log_level                :info
 log_location             STDOUT
-node_name                "jblainehome"
-client_key               "#{current_dir}/jblainehome.pem"
-validation_client_name   "jblainehome-validator"
-validation_key           "#{current_dir}/jblainehome-validator.pem"
-chef_server_url          "https://api.opscode.com/organizations/jblainehome"
+node_name                "jblaine"
+client_key               "#{current_dir}/jblaine.pem"
+validation_client_name   "jblaine-validator"
+validation_key           "#{current_dir}/jblaine-validator.pem"
+chef_server_url          "https://api.chef.io/organizations/jblaine"
 cookbook_path            ["#{current_dir}/../cookbooks"]
